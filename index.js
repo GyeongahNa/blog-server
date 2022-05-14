@@ -18,17 +18,23 @@ const connection = mysql.createConnection({
     password: "test" // password of the mysql connection
     });
 
-app.get('/', (req, res) => {
-    console.log('/');
-    res.status(201).send('/');
-})
+// app.get('/', (req, res) => {
+//     console.log('/');
+//     res.status(201).send('/');
+// })
 
 app.get('/article', (req, res) => {
     console.log('/article');
+    connection.query (
+        "SELECT * FROM article",
+        (err, result, fields) => {
+            if (err) throw err;
+            console.log(result);
+            res.status(200).send(result);
+        }
+    );
 
-
-
-    res.status(201).send('/article');
+    // res.status(200).send();
 })
 
 app.post('/article', (req, res) => {
@@ -36,22 +42,38 @@ app.post('/article', (req, res) => {
     console.log(req.body.title);
     console.log(req.body.detail);
 
+    const result = connection.query (
+        `INSERT INTO article(title, detail) VALUES('${req.body.title}', '${req.body.detail}}')`,
+        (err, result, fields) => {
+            if (err) throw err;
+        }
+    )
+
     if (req.body.title === undefined || req.body.detail == undefined) {
         res.status(400).send('Error!');
     }
     res.status(201).send('/article');
 })
 
-app.get('/article:id', (req, res) => {
-    console.log('/article:id');
-    if (req.params.id < 0) res.status(400).send("Error!");
-    res.status(201).send('/article');
+app.get('/article/:id', (req, res) => {
+    console.log('/article/:id');
+    console.log(req.params);
+    connection.query (
+        `SELECT * FROM article WHERE id=${req.params.id}`,
+        (err, result, fields) => {
+            if (err) throw err;
+            console.log(result);
+            res.status(200).send(result);
+        }
+    );
+
+    // if (req.params.id < 0) res.status(400).send("Error!");
+    // res.status(200).send('/article');
 })
 
 connection.connect(function (err) {
     if(err){
         console.log("error occured while connecting");
-        console.log(err);
     }
     else{
         console.log("connection created with Mysql successfully");
