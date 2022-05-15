@@ -1,7 +1,9 @@
 const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require("body-parser");
+const util = require('util')
 const app = express();
+
 
 // ADD THIS
 var cors = require('cors');
@@ -18,57 +20,56 @@ const connection = mysql.createConnection({
     password: "test" // password of the mysql connection
     });
 
-// app.get('/', (req, res) => {
-//     console.log('/');
-//     res.status(201).send('/');
-// })
+const query = util.promisify(connection.query).bind(connection);
 
-app.get('/article', (req, res) => {
+app.get('/article', async (req, res) => {
     console.log('/article');
-    connection.query (
-        "SELECT * FROM article",
-        (err, result, fields) => {
-            if (err) throw err;
-            console.log(result);
-            res.status(200).send(result);
-        }
-    );
 
-    // res.status(200).send();
+    try {
+        let articleResult = await query (
+            "SELECT * FROM article");
+        console.log(articleResult);
+        res.status(200).send(articleResult);
+    } catch (err) {
+        res.status(500).send();
+    }
 })
 
 app.post('/article', (req, res) => {
     console.log('/article');
-    console.log(req.body.title);
-    console.log(req.body.detail);
+
+    const title = req.body.title;
+    const detail = req.body.detail;
+    console.log(title);
+    console.log(detail);
+
+    if (req.body.title === undefined || req.body.detail == undefined) {
+        res.status(400).send('Error!');
+    }
 
     const result = connection.query (
-        `INSERT INTO article(title, detail) VALUES('${req.body.title}', '${req.body.detail}}')`,
+        `INSERT INTO article(title, detail) VALUES('${title}', '${detail}}')`,
         (err, result, fields) => {
             if (err) throw err;
         }
     )
 
-    if (req.body.title === undefined || req.body.detail == undefined) {
-        res.status(400).send('Error!');
-    }
     res.status(201).send('/article');
 })
 
-app.get('/article/:id', (req, res) => {
+app.get('/article/:id', async (req, res) => {
     console.log('/article/:id');
     console.log(req.params);
-    connection.query (
-        `SELECT * FROM article WHERE id=${req.params.id}`,
-        (err, result, fields) => {
-            if (err) throw err;
-            console.log(result);
-            res.status(200).send(result);
-        }
-    );
+    const id = req.params.id;
 
-    // if (req.params.id < 0) res.status(400).send("Error!");
-    // res.status(200).send('/article');
+    try {
+        let articleResult = await query (`SELECT * FROM article WHERE id=${id}`);
+        console.log(articleResult);
+        res.status(200).send(articleResult);
+        
+    } catch (err) {
+        res.status(500).send();
+    }
 })
 
 connection.connect(function (err) {
